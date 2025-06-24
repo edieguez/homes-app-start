@@ -10,13 +10,11 @@ import {HousingService} from "../housing.service";
     imports: [CommonModule, HousingLocationComponent],
     template: `
         <section>
-            <form>
-                <input type="text" placeholder="Filter by city">
-                <button class="primary">Search</button>
-            </form>
+            <input #filter type="text" placeholder="Filter by city">
+            <button class="primary" (click)="filterHousingLocations(filter.value)">Search</button>
         </section>
         <section class="results">
-            <app-housing-location *ngFor="let housingLocation of housingLocationList"
+            <app-housing-location *ngFor="let housingLocation of filteredHousingLocations"
                                   [housingLocation]="housingLocation"></app-housing-location>
         </section>
     `,
@@ -25,10 +23,26 @@ import {HousingService} from "../housing.service";
 export class HomeComponent {
     housingService: HousingService = inject(HousingService);
     housingLocationList: HousingLocation[] = [];
+    filteredHousingLocations: HousingLocation[] = [];
 
     constructor() {
         this.housingService.fetchHousingLocationList().then(
-            (housingLocations: HousingLocation[]) => this.housingLocationList = housingLocations,
+            (housingLocations: HousingLocation[]) => {
+                this.housingLocationList = housingLocations;
+                this.filteredHousingLocations = housingLocations;
+            },
         );
+    }
+
+    filterHousingLocations(searchText: string) {
+        if (searchText) {
+            this.filteredHousingLocations = this.housingLocationList.filter((housingLocation: HousingLocation) => {
+                return housingLocation?.name.toLocaleLowerCase().includes(searchText.toLocaleLowerCase()) ||
+                    housingLocation?.city.toLocaleLowerCase().includes(searchText.toLocaleLowerCase()) ||
+                    housingLocation?.state.toLocaleLowerCase().includes(searchText.toLocaleLowerCase())
+            });
+        } else {
+            this.filteredHousingLocations = this.housingLocationList;
+        }
     }
 }
